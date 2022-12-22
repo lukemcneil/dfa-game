@@ -1,31 +1,40 @@
-export type Letter = "0" | "1"
-export type InputString = Letter[]
+export type Letter = "0" | "1";
 
-export interface State {
-    edges: Map<Letter, State>
-    isAcceptState: boolean
+export class State {
+    edges: Map<Letter, State>;
+    isAcceptState: boolean;
+
+    constructor(edges: Map<Letter, State>, isAcceptState: boolean = false) {
+        this.edges = edges;
+        this.isAcceptState = isAcceptState;
+    }
+
+    run(input: Letter[]) {
+        let nextLetter = input.shift();
+        if (!nextLetter) {
+            return this.isAcceptState;
+        }
+        let nextState = this.edges.get(nextLetter);
+        if (!nextState) {
+            return false;
+        }
+        return nextState.run(input);
+    }
 }
 
-export interface DFA {
+export class DFA {
     states: State[]
     startState: State | null
-}
 
-export function runDFA(dfa: DFA, input: InputString): boolean {
-    if (!dfa.startState) {
-        return false
+    constructor(states: State[], startState: State | null) {
+        this.states = states;
+        this.startState = startState;
     }
-    return runDFAHelper(dfa.startState, input)
-}
 
-function runDFAHelper(state: State, input: InputString): boolean {
-    let nextLetter = input.shift()
-    if (!nextLetter) {
-        return state.isAcceptState
+    run(input: Letter[]) {
+        if (!this.startState) {
+            return false;
+        }
+        return this.startState.run(input);
     }
-    let nextState = state.edges.get(nextLetter)
-    if (!nextState) {
-        return false
-    }
-    return runDFAHelper(nextState, input)
 }
