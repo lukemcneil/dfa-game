@@ -5,6 +5,7 @@ const ARROW_HEIGHT = 5;
 const ARROW_WIDTH = 8;
 const NORMAL_COLOR = "black";
 const SELECTED_COLOR = "red";
+const POINTING_BACK_SHIFT = 10;
 
 export function drawRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, color: string) {
     ctx.save();
@@ -23,17 +24,23 @@ export function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, 
     ctx.restore();
 }
 
-export function drawLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, color: string) {
+export function drawLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, color: string, isEdgePointingBack: boolean) {
     ctx.save();
+    let angle = Math.atan2(-(y2 - y1), x2 - x1);
+    function shiftForPointingBack(point: [number, number]): [number, number] {
+        return translatePoint(point, angle + Math.PI / 2, isEdgePointingBack ? POINTING_BACK_SHIFT : 0);
+    }
+
     ctx.beginPath();
     ctx.strokeStyle = color;
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
+    let point1 = shiftForPointingBack([x1, y1]);
+    let point2 = shiftForPointingBack([x2, y2]);
+    ctx.moveTo(point1[0], point1[1]);
+    ctx.lineTo(point2[0], point2[1]);
     ctx.stroke();
 
-    let angle = Math.atan2(-(y2 - y1), x2 - x1);
     ctx.beginPath();
-    let arrowTip = translatePoint([x2, y2], angle, RADIUS);
+    let arrowTip = shiftForPointingBack(translatePoint([x2, y2], angle, RADIUS));
     ctx.moveTo(arrowTip[0], arrowTip[1]);
     let arrowEdge1 = translatePoint(translatePoint(arrowTip, angle, ARROW_HEIGHT), angle - Math.PI / 2, ARROW_WIDTH);
     ctx.lineTo(arrowEdge1[0], arrowEdge1[1]);
@@ -90,9 +97,18 @@ export function drawDFA(ctx: CanvasRenderingContext2D, dfa: DFA) {
                 drawSelfLine(ctx, s.position[0], s.position[1] - RADIUS, RADIUS, NORMAL_COLOR);
                 return;
             }
-            drawLine(ctx, s.position[0], s.position[1], toState.position[0], toState.position[1], NORMAL_COLOR);
-            ctx.fillText(letter, toState.position[0] + 50, toState.position[1]);
+            let isEdgePointingBack = false;
+            toState.edges.forEach(checkState => {
+                if (checkState == s) {
+                    isEdgePointingBack = true;
+                }
+            })
+            drawLine(ctx, s.position[0], s.position[1], toState.position[0], toState.position[1], NORMAL_COLOR, isEdgePointingBack);
         })
+
+    });
+
+    dfa.states.forEach(s => {
         drawCircle(ctx, s.position[0], s.position[1], RADIUS, s.selected ? SELECTED_COLOR : NORMAL_COLOR);
     });
 }
