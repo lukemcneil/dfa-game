@@ -40,6 +40,11 @@ window.onload = function () {
                     selectedState = s;
                     s.selected = true;
                 }
+            } else {
+                if (selectedState) {
+                    selectedState.selected = false;
+                    selectedState = null;
+                }
             }
         }
         drawDFA(ctx, dfa);
@@ -54,5 +59,16 @@ window.onload = function () {
             draggingState.position = [e.offsetX, e.offsetY];
             drawDFA(ctx, dfa);
         }
+    })
+
+    window.addEventListener("keypress", function (e: KeyboardEvent) {
+        if (e.key == "s") {
+            if (selectedState) {
+                dfa.startState = selectedState;
+                selectedState.selected = false;
+                selectedState = null;
+            }
+        }
+        drawDFA(ctx, dfa);
     })
 }

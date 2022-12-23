@@ -108,6 +108,10 @@ export function drawDFA(ctx: CanvasRenderingContext2D, dfa: DFA) {
 
     });
 
+    if (dfa.startState) {
+        drawLine(ctx, dfa.startState.position[0] - 2 * RADIUS, dfa.startState.position[1], dfa.startState.position[0], dfa.startState.position[1], NORMAL_COLOR, false);
+    }
+
     dfa.states.forEach(s => {
         drawCircle(ctx, s.position[0], s.position[1], RADIUS, s.selected ? SELECTED_COLOR : NORMAL_COLOR);
     });
