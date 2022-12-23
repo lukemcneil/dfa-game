@@ -6,6 +6,7 @@ export class State {
     edges: Map<Letter, State>;
     isAcceptState: boolean;
     position: [number, number];
+    selected: boolean;
 
     constructor(edges: Map<Letter, State>, isAcceptState: boolean, position: [number, number]) {
         this.edges = edges;
