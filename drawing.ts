@@ -24,7 +24,7 @@ export function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, 
     ctx.restore();
 }
 
-export function drawLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, color: string, isEdgePointingBack: boolean) {
+export function drawLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, color: string, isEdgePointingBack: boolean, letter: string) {
     ctx.save();
     let angle = Math.atan2(-(y2 - y1), x2 - x1);
     function shiftForPointingBack(point: [number, number]): [number, number] {
@@ -48,15 +48,18 @@ export function drawLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, 
     ctx.lineTo(arrowEdge2[0], arrowEdge2[1]);
     ctx.fill();
 
+    ctx.fillText(letter, (point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2);
+
     ctx.restore();
 }
 
-export function drawSelfLine(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string) {
+export function drawSelfLine(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string, letter: string) {
     ctx.save();
     ctx.strokeStyle = color;
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.arc(x, y - RADIUS, radius, 0, 2 * Math.PI);
     ctx.stroke();
+    ctx.fillText(letter, x - RADIUS * .125, y - RADIUS * 1.25);
     ctx.restore();
 }
 
@@ -92,9 +95,18 @@ export function drawDFA(ctx: CanvasRenderingContext2D, dfa: DFA) {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     dfa.states.forEach(s => {
+        let toDraw: Map<State, string> = new Map();
         s.edges.forEach((toState, letter) => {
+            if (toDraw.has(toState)) {
+                toDraw.set(toState, toDraw.get(toState) + "," + letter);
+            } else {
+                toDraw.set(toState, letter);
+            }
+        });
+
+        toDraw.forEach((letter, toState) => {
             if (s == toState) {
-                drawSelfLine(ctx, s.position[0], s.position[1] - RADIUS, RADIUS, NORMAL_COLOR);
+                drawSelfLine(ctx, s.position[0], s.position[1], RADIUS, NORMAL_COLOR, letter);
                 return;
             }
             let isEdgePointingBack = false;
@@ -102,14 +114,14 @@ export function drawDFA(ctx: CanvasRenderingContext2D, dfa: DFA) {
                 if (checkState == s) {
                     isEdgePointingBack = true;
                 }
-            })
-            drawLine(ctx, s.position[0], s.position[1], toState.position[0], toState.position[1], NORMAL_COLOR, isEdgePointingBack);
-        })
+            });
+            drawLine(ctx, s.position[0], s.position[1], toState.position[0], toState.position[1], NORMAL_COLOR, isEdgePointingBack, letter);
+        });
 
     });
 
     if (dfa.startState) {
-        drawLine(ctx, dfa.startState.position[0] - 2 * RADIUS, dfa.startState.position[1], dfa.startState.position[0], dfa.startState.position[1], NORMAL_COLOR, false);
+        drawLine(ctx, dfa.startState.position[0] - 2 * RADIUS, dfa.startState.position[1], dfa.startState.position[0], dfa.startState.position[1], NORMAL_COLOR, false, "");
     }
 
     dfa.states.forEach(s => {

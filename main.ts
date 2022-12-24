@@ -1,4 +1,4 @@
-import { State, DFA } from "./dfa";
+import { State, DFA, Letter } from "./dfa";
 import { canPlaceState, clickedState, drawDFA } from "./drawing";
 
 const LEFT = 0;
@@ -33,9 +33,12 @@ window.onload = function () {
             let s = clickedState(dfa, e.offsetX, e.offsetY);
             if (s) {
                 if (selectedState) {
-                    selectedState.edges.set("0", s);
-                    selectedState.selected = false;
-                    selectedState = null;
+                    let selectedLetter = document.querySelector("input[name='letterSelect']:checked") as HTMLInputElement
+                    if (selectedLetter) {
+                        selectedState.edges.set(selectedLetter.value as Letter, s);
+                        selectedState.selected = false;
+                        selectedState = null;
+                    }
                 } else {
                     selectedState = s;
                     s.selected = true;
