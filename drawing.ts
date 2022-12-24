@@ -15,12 +15,18 @@ export function drawRect(ctx: CanvasRenderingContext2D, x: number, y: number, wi
     ctx.restore();
 }
 
-export function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string) {
+export function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string, isAcceptState: boolean) {
     ctx.save();
     ctx.beginPath();
     ctx.fillStyle = color;
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
     ctx.fill();
+
+    if (isAcceptState) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 3, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
     ctx.restore();
 }
 
@@ -95,18 +101,20 @@ export function drawDFA(ctx: CanvasRenderingContext2D, dfa: DFA) {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     dfa.states.forEach(s => {
-        let toDraw: Map<State, string> = new Map();
+        let toDraw: Map<State, string[]> = new Map();
         s.edges.forEach((toState, letter) => {
             if (toDraw.has(toState)) {
-                toDraw.set(toState, toDraw.get(toState) + "," + letter);
+                toDraw.get(toState)?.push(letter);
             } else {
-                toDraw.set(toState, letter);
+                toDraw.set(toState, [letter]);
             }
         });
 
-        toDraw.forEach((letter, toState) => {
+        toDraw.forEach((letters, toState) => {
+            letters.sort();
+            let label = letters.join(",");
             if (s == toState) {
-                drawSelfLine(ctx, s.position[0], s.position[1], RADIUS, NORMAL_COLOR, letter);
+                drawSelfLine(ctx, s.position[0], s.position[1], RADIUS, NORMAL_COLOR, label);
                 return;
             }
             let isEdgePointingBack = false;
@@ -115,7 +123,7 @@ export function drawDFA(ctx: CanvasRenderingContext2D, dfa: DFA) {
                     isEdgePointingBack = true;
                 }
             });
-            drawLine(ctx, s.position[0], s.position[1], toState.position[0], toState.position[1], NORMAL_COLOR, isEdgePointingBack, letter);
+            drawLine(ctx, s.position[0], s.position[1], toState.position[0], toState.position[1], NORMAL_COLOR, isEdgePointingBack, label);
         });
 
     });
@@ -125,6 +133,6 @@ export function drawDFA(ctx: CanvasRenderingContext2D, dfa: DFA) {
     }
 
     dfa.states.forEach(s => {
-        drawCircle(ctx, s.position[0], s.position[1], RADIUS, s.selected ? SELECTED_COLOR : NORMAL_COLOR);
+        drawCircle(ctx, s.position[0], s.position[1], RADIUS, s.selected ? SELECTED_COLOR : NORMAL_COLOR, s.isAcceptState);
     });
 }

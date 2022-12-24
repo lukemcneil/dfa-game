@@ -7,6 +7,8 @@ const RIGHT = 2;
 window.onload = function () {
     const canvas = document.getElementById("dfaCanvas") as HTMLCanvasElement;
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+    let inputString = this.document.getElementById("inputString") as HTMLInputElement
+    let resultText = document.getElementById("results") as HTMLElement;
     canvas.style.background = "gray";
     canvas.width = 500;
     canvas.height = 500;
@@ -14,6 +16,12 @@ window.onload = function () {
     let dfa = new DFA([], null);
     let selectedState: State | null = null;
     let draggingState: State | null = null;
+
+    function update() {
+        drawDFA(ctx, dfa);
+        let result = dfa.run(inputString.value.replace(/ /g, ' ').toLowerCase().split("") as Letter[]);
+        resultText!.textContent = result ? "✅" : "❌";
+    }
 
     // disable right click opening context menu on canvas
     canvas.oncontextmenu = () => false;
@@ -50,7 +58,7 @@ window.onload = function () {
                 }
             }
         }
-        drawDFA(ctx, dfa);
+        update();
     })
 
     canvas.addEventListener("mouseup", function (e: MouseEvent) {
@@ -60,18 +68,29 @@ window.onload = function () {
     canvas.addEventListener("mousemove", function (e: MouseEvent) {
         if (draggingState) {
             draggingState.position = [e.offsetX, e.offsetY];
-            drawDFA(ctx, dfa);
+            update();
         }
     })
 
-    window.addEventListener("keypress", function (e: KeyboardEvent) {
-        if (e.key == "s") {
-            if (selectedState) {
-                dfa.startState = selectedState;
-                selectedState.selected = false;
-                selectedState = null;
-            }
+    document.getElementById("startStateButton")!.onclick = function (_) {
+        if (selectedState) {
+            dfa.startState = selectedState;
+            selectedState.selected = false;
+            selectedState = null;
+            update();
         }
-        drawDFA(ctx, dfa);
-    })
+    }
+
+    document.getElementById("acceptStateButton")!.onclick = function (_) {
+        if (selectedState) {
+            selectedState.isAcceptState = !selectedState.isAcceptState;
+            selectedState.selected = false;
+            selectedState = null;
+            update();
+        }
+    }
+
+    inputString.oninput = function (_) {
+        update();
+    }
 }
